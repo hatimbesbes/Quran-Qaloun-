@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>القرآن الكريم</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+    background:#2c3e50;
+    color:white;
+    font-family:Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+/* ===== HEADER ===== */
+.header{
+    margin:15px 0;
+    text-align:center;
+    direction:rtl;
+}
+.header h1{color:#f1c40f}
+
+/* ===== BOOK ===== */
+.book-container{
+    width:100%;
+    max-width:600px;
+    height:80vh;
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.pages-container{
+    display:flex;
+    width:100%;
+    height:100%;
+}
+
+.page{
+    width:50%;
+    background:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    box-shadow:0 0 15px rgba(0,0,0,.4);
+}
+
+.page img{
+    max-width:95%;
+    max-height:95%;
+}
+
+/* SUPPRESSION NUMÉROTATION */
+.page-number{display:none}
+
+/* TURN AREAS */
+.turn-area{
+    position:absolute;
+    top:0;
+    width:80px;
+    height:100%;
+    cursor:pointer;
+    font-size:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:rgba(255,255,255,.6);
+    z-index:10;
+}
+.turn-left{left:0}
+.turn-right{right:0}
+
+/* ===== MENU BUTTON ===== */
+.menu-btn{
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:#f1c40f;
+    color:black;
+    padding:10px 18px;
+    border-radius:30px;
+    cursor:pointer;
+    z-index:1001;
+}
+
+/* ===== MENU ===== */
+.surah-menu{
+    position:fixed;
+    top:0;
+    right:-320px;
+    width:300px;
+    height:100%;
+    background:#1e272e;
+    transition:.4s;
+    z-index:1000;
+    direction:rtl;
+    display:flex;
+    flex-direction:column;
+}
+.surah-menu.open{right:0}
+
+.surah-header{
+    padding:10px;
+    background:#f1c40f;
+}
+
+/* ===== TABS ===== */
+.tabs{
+    display:flex;
+    gap:5px;
+}
+.tabs span{
+    flex:1;
+    text-align:center;
+    padding:8px;
+    cursor:pointer;
+    background:rgba(255,255,255,.7);
+    color:black;
+    font-weight:bold;
+    border-radius:8px;
+}
+.tabs span.active{
+    background:#2c3e50;
+    color:#f1c40f;
+}
+
+/* ===== LIST ===== */
+.surah-list{
+    overflow-y:auto;
+    flex:1;
+}
+.surah-item{
+    padding:12px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    cursor:pointer;
+}
+.surah-item:hover{background:rgba(255,255,255,.1)}
+.surah-name{color:#f1c40f}
+.surah-page{font-size:13px;color:#ccc}
+</style>
+</head>
+
+<body>
+
+<!-- BOUTON MENU -->
+<div class="menu-btn" onclick="toggleMenu()">☰ الفهرس</div>
+
+<!-- MENU -->
+<div class="surah-menu" id="menu">
+    <div class="surah-header">
+        <div class="tabs">
+            <span id="tab-surah" onclick="showTab('surah')">السور</span>
+            <span id="tab-juz" onclick="showTab('juz')">الأجزاء</span>
+            <span id="tab-hizb" onclick="showTab('hizb')">الأحزاب</span>
+        </div>
+    </div>
+
+    <div class="surah-list" id="surahList"></div>
+    <div class="surah-list" id="juzList" style="display:none"></div>
+    <div class="surah-list" id="hizbList" style="display:none"></div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+    <h1>📖 القرآن الكريم</h1>
+</div>
+
+<!-- BOOK -->
+<div class="book-container">
+    <div class="turn-area turn-left" onclick="prevPage()">‹</div>
+    <div class="pages-container" id="pages"></div>
+    <div class="turn-area turn-right" onclick="nextPage()">›</div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const TOTAL_PAGES = 605;
+let currentSpread = 0;
+
+/* ===== LOAD IMAGE ===== */
+function loadImage(n){
+    return new Promise(resolve=>{
+        const img = new Image();
+        img.src = `pages/${n.toString().padStart(3,'0')}.jpg`;
+        img.onload = () => resolve(img);
+    });
+}
+
+/* ===== SHOW SPREAD ===== */
+async function showSpread(s){
+    const c = document.getElementById('pages');
+    c.innerHTML = '';
+
+    let right = (s === 0) ? 0 : s * 2;
+    let left  = (s === 0) ? null : s * 2 - 1;
+
+    const rDiv = document.createElement('div');
+    rDiv.className = 'page';
+    rDiv.appendChild(await loadImage(right));
+    c.appendChild(rDiv);
+
+    if(left !== null && left < TOTAL_PAGES){
+        const lDiv = document.createElement('div');
+        lDiv.className = 'page';
+        lDiv.appendChild(await loadImage(left));
+        c.appendChild(lDiv);
+    }
+
+    currentSpread = s;
+}
+
+/* ===== NAVIGATION ===== */
+function nextPage(){
+    if((currentSpread + 1) * 2 < TOTAL_PAGES)
+        showSpread(currentSpread + 1);
+}
+function prevPage(){
+    if(currentSpread > 0)
+        showSpread(currentSpread - 1);
+}
+function goToPage(p){
+    if(p === 1) showSpread(0);
+    else showSpread(Math.ceil(p / 2));
+}
+
+/* ===== MENU ===== */
+function toggleMenu(){
+    document.getElementById('menu').classList.toggle('open');
+}
+
+function showTab(tab) {
+    const surahList = document.getElementById('surahList');
+    const juzList   = document.getElementById('juzList');
+    const hizbList  = document.getElementById('hizbList');
+
+    surahList.style.display = 'none';
+    juzList.style.display   = 'none';
+    hizbList.style.display  = 'none';
+
+    document.getElementById('tab-surah').classList.remove('active');
+    document.getElementById('tab-juz').classList.remove('active');
+    document.getElementById('tab-hizb').classList.remove('active');
+
+    if (tab === 'surah') {
+        surahList.style.display = 'block';
+        document.getElementById('tab-surah').classList.add('active');
+    }
+    else if (tab === 'juz') {
+        juzList.style.display = 'block';
+        document.getElementById('tab-juz').classList.add('active');
+    }
+    else if (tab === 'hizb') {
+        hizbList.style.display = 'block';
+        document.getElementById('tab-hizb').classList.add('active');
+    }
+}
+
+
+/* ===== DATA ===== */
+const surahs = [
+ {name:"الفاتحة",page:1},
+ {name:"البقرة",page:2},
+ {name:"آل عمران",page:50},
+ {name:"النساء",page:77},
+ {name:"المائدة",page:106},
+ {name:"الأنعام",page:128},
+ {name:"الأعراف",page:151},
+ {name:"الأنفال",page:177},
+ {name:"التوبة",page:187},
+ {name:"يونس",page:208},
+ {name:"هود",page:221},
+ {name:"يوسف",page:235},
+ {name:"الرعد",page:249},
+ {name:"إبراهيم",page:255},
+ {name:"الحجر",page:262},
+ {name:"النحل",page:267},
+ {name:"الإسراء",page:282},
+ {name:"الكهف",page:293},
+ {name:"مريم",page:305},
+ {name:"طه",page:312},
+ {name:"الأنبياء",page:322},
+ {name:"الحج",page:332},
+ {name:"المؤمنون",page:342},
+ {name:"النور",page:350},
+ {name:"الفرقان",page:359},
+ {name:"الشعراء",page:367},
+ {name:"النمل",page:377},
+ {name:"القصص",page:385},
+ {name:"العنكبوت",page:396},
+ {name:"الروم",page:404},
+ {name:"لقمان",page:411},
+ {name:"السجدة",page:415},
+ {name:"الأحزاب",page:418},
+ {name:"سبأ",page:428},
+ {name:"فاطر",page:434},
+ {name:"يس",page:440},
+ {name:"الصافات",page:446},
+ {name:"ص",page:453},
+ {name:"الزمر",page:458},
+ {name:"غافر",page:467},
+ {name:"فصلت",page:477},
+ {name:"الشورى",page:483},
+ {name:"الزخرف",page:489},
+ {name:"الدخان",page:496},
+ {name:"الجاثية",page:499},
+ {name:"الأحقاف",page:502},
+ {name:"محمد",page:507},
+ {name:"الفتح",page:511},
+ {name:"الحجرات",page:515},
+ {name:"ق",page:518},
+ {name:"الذاريات",page:520},
+ {name:"الطور",page:523},
+ {name:"النجم",page:526},
+ {name:"القمر",page:528},
+ {name:"الرحمن",page:531},
+ {name:"الواقعة",page:534},
+ {name:"الحديد",page:537},
+ {name:"المجادلة",page:542},
+ {name:"الحشر",page:545},
+ {name:"الممتحنة",page:549},
+ {name:"الصف",page:551},
+ {name:"الجمعة",page:553},
+ {name:"المنافقون",page:554},
+ {name:"التغابن",page:556},
+ {name:"الطلاق",page:558},
+ {name:"التحريم",page:560},
+ {name:"الملك",page:562},
+ {name:"القلم",page:564},
+ {name:"الحاقة",page:566},
+ {name:"المعارج",page:568},
+ {name:"نوح",page:570},
+ {name:"الجن",page:572},
+ {name:"المزمل",page:574},
+ {name:"المدثر",page:575},
+ {name:"القيامة",page:577},
+ {name:"الإنسان",page:578},
+ {name:"المرسلات",page:580},
+ {name:"النبأ",page:582},
+ {name:"النازعات",page:583},
+ {name:"عبس",page:585},
+ {name:"التكوير",page:586},
+ {name:"الإنفطار",page:587},
+ {name:"المطففين",page:587},
+ {name:"الإنشقاق",page:589},
+ {name:"البروج",page:590},
+ {name:"الطارق",page:591},
+ {name:"الأعلى",page:591},
+ {name:"الغاشية",page:592},
+ {name:"الفجر",page:593},
+ {name:"البلد",page:594},
+ {name:"الشمس",page:595},
+ {name:"الليل",page:595},
+ {name:"الضحى",page:596},
+ {name:"الشرح",page:596},
+ {name:"التين",page:597},
+ {name:"العلق",page:597},
+ {name:"القدر",page:598},
+ {name:"البينة",page:598},
+ {name:"الزلزلة",page:599},
+ {name:"العاديات",page:599},
+ {name:"القارعة",page:600},
+ {name:"التكاثر",page:600},
+ {name:"العصر",page:601},
+ {name:"الهمزة",page:601},
+ {name:"الفيل",page:601},
+ {name:"قريش",page:602},
+ {name:"الماعون",page:602},
+ {name:"الكوثر",page:602},
+ {name:"الكافرون",page:603},
+ {name:"النصر",page:603},
+ {name:"المسد",page:603},
+ {name:"الإخلاص",page:604},
+ {name:"الفلق",page:604},
+ {name:"الناس",page:604}
+];
+
+
+const juz = [
+ {name:"الجزء 1",page:1},
+ {name:"الجزء 2",page:22},
+ {name:"الجزء 3",page:42},
+ {name:"الجزء 4",page:62},
+ {name:"الجزء 5",page:82},
+ {name:"الجزء 6",page:102},
+ {name:"الجزء 7",page:121},
+ {name:"الجزء 8",page:142},
+ {name:"الجزء 9",page:162},
+ {name:"الجزء 10",page:182},
+ {name:"الجزء 11",page:201},
+ {name:"الجزء 12",page:222},
+ {name:"الجزء 13",page:242},
+ {name:"الجزء 14",page:262},
+ {name:"الجزء 15",page:282},
+ {name:"الجزء 16",page:302},
+ {name:"الجزء 17",page:322},
+ {name:"الجزء 18",page:342},
+ {name:"الجزء 19",page:362},
+ {name:"الجزء 20",page:382},
+ {name:"الجزء 21",page:402},
+ {name:"الجزء 22",page:422},
+ {name:"الجزء 23",page:442},
+ {name:"الجزء 24",page:462},
+ {name:"الجزء 25",page:482},
+ {name:"الجزء 26",page:502},
+ {name:"الجزء 27",page:522},
+ {name:"الجزء 28",page:542},
+ {name:"الجزء 29",page:562},
+ {name:"الجزء 30",page:582}
+];
+
+
+const hizb = [
+ {name:"الحزب 1",page:1},{name:"الحزب 2",page:11},
+ {name:"الحزب 3",page:22},{name:"الحزب 4",page:32},
+ {name:"الحزب 5",page:42},{name:"الحزب 6",page:52},
+ {name:"الحزب 7",page:62},{name:"الحزب 8",page:72},
+ {name:"الحزب 9",page:82},{name:"الحزب 10",page:92},
+ {name:"الحزب 11",page:102},{name:"الحزب 12",page:112},
+ {name:"الحزب 13",page:121},{name:"الحزب 14",page:132},
+ {name:"الحزب 15",page:142},{name:"الحزب 16",page:152},
+ {name:"الحزب 17",page:162},{name:"الحزب 18",page:172},
+ {name:"الحزب 19",page:182},{name:"الحزب 20",page:192},
+ {name:"الحزب 21",page:201},{name:"الحزب 22",page:212},
+ {name:"الحزب 23",page:222},{name:"الحزب 24",page:232},
+ {name:"الحزب 25",page:242},{name:"الحزب 26",page:252},
+ {name:"الحزب 27",page:262},{name:"الحزب 28",page:272},
+ {name:"الحزب 29",page:282},{name:"الحزب 30",page:292},
+ {name:"الحزب 31",page:302},{name:"الحزب 32",page:312},
+ {name:"الحزب 33",page:322},{name:"الحزب 34",page:332},
+ {name:"الحزب 35",page:342},{name:"الحزب 36",page:352},
+ {name:"الحزب 37",page:362},{name:"الحزب 38",page:372},
+ {name:"الحزب 39",page:382},{name:"الحزب 40",page:392},
+ {name:"الحزب 41",page:402},{name:"الحزب 42",page:412},
+ {name:"الحزب 43",page:422},{name:"الحزب 44",page:432},
+ {name:"الحزب 45",page:442},{name:"الحزب 46",page:452},
+ {name:"الحزب 47",page:462},{name:"الحزب 48",page:472},
+ {name:"الحزب 49",page:482},{name:"الحزب 50",page:492},
+ {name:"الحزب 51",page:502},{name:"الحزب 52",page:512},
+ {name:"الحزب 53",page:522},{name:"الحزب 54",page:532},
+ {name:"الحزب 55",page:542},{name:"الحزب 56",page:552},
+ {name:"الحزب 57",page:562},{name:"الحزب 58",page:572},
+ {name:"الحزب 59",page:582},{name:"الحزب 60",page:592}
+];
+
+
+/* ===== BUILD LISTS ===== */
+function build(list,id){
+    const c = document.getElementById(id);
+    list.forEach(x=>{
+        const d = document.createElement('div');
+        d.className = 'surah-item';
+        d.innerHTML = `
+            <div class="surah-name">${x.name}</div>
+            <div class="surah-page">الصفحة ${x.page}</div>
+        `;
+        d.onclick = ()=>{
+            goToPage(x.page);
+            toggleMenu();
+        };
+        c.appendChild(d);
+    });
+}
+
+/* ===== INIT ===== */
+build(surahs,'surahList');
+build(juz,'juzList');
+build(hizb,'hizbList');
+showTab('surah');
+showSpread(0);
+</script>
+
+</body>
+</html>
