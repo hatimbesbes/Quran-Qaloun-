@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>القرآن الكريم - قلب الصفحات</title>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            direction: rtl;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #f1c40f;
+        }
+        
+        .book-container {
+            width: 100%;
+            max-width: 600px;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Conteneur pour les DEUX pages côte à côte */
+        .pages-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            justify-content: center;
+        }
+        
+        /* Style pour chaque page */
+        .page {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.5s ease;
+        }
+        
+        /* Page de DROITE (pour arabe) */
+        .page-right {
+            border-left: 1px solid #ddd;
+        }
+        
+        /* Page de GAUCHE (pour arabe) */
+        .page-left {
+            border-right: 1px solid #ddd;
+        }
+        
+        .page img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+        }
+        
+        .page-number {
+            position: absolute;
+            bottom: 15px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+        
+        .page-right .page-number {
+            left: 20px;
+        }
+        
+        .page-left .page-number {
+            right: 20px;
+        }
+        
+        /* Zones cliquables pour tourner les pages */
+        .turn-area {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 100px;
+            z-index: 10;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 40px;
+            user-select: none;
+            transition: all 0.3s;
+        }
+        
+        .turn-area:hover {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .turn-left {
+            left: 0;
+        }
+        
+        .turn-right {
+            right: 0;
+        }
+        
+        /* Contrôles */
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            direction: rtl;
+        }
+        
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 150px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        button.prev {
+            background: #e74c3c;
+        }
+        
+        button.next {
+            background: #2ecc71;
+        }
+        
+        .page-info {
+            font-size: 24px;
+            padding: 15px 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            min-width: 250px;
+            text-align: center;
+            direction: rtl;
+        }
+        
+        /* Navigation rapide */
+        .quick-nav {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            direction: rtl;
+        }
+        
+        .quick-nav input {
+            padding: 12px;
+            font-size: 18px;
+            width: 100px;
+            text-align: center;
+            border: none;
+            border-radius: 10px;
+            background: white;
+        }
+        
+        .quick-nav button {
+            padding: 12px 25px;
+            background: #9b59b6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: auto;
+        }
+        
+        /* Indicateurs */
+        .page-indicators {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 800px;
+        }
+        
+        .page-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .page-dot.active {
+            background: #f1c40f;
+            transform: scale(1.3);
+        }
+        
+        .page-dot:hover {
+            background: #3498db;
+        }
+        
+        /* Instructions */
+        .instructions {
+            margin-top: 30px;
+            text-align: center;
+            direction: rtl;
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 800px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #f1c40f;
+        }
+        
+        .instructions p {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        /* ===== MENU DES SOURATES ===== */
+        .surah-menu {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: #1e272e;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            transition: right 0.4s ease;
+            z-index: 1000;
+            direction: rtl;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .surah-menu.open {
+            right: 0;
+        }
+
+        .surah-header {
+            padding: 20px;
+            background: #f1c40f;
+            color: #000;
+            font-size: 22px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .surah-list {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .surah-item {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .surah-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .surah-name {
+            font-size: 18px;
+            color: #f1c40f;
+        }
+
+        .surah-page {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        /* Bouton menu */
+        .menu-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f1c40f;
+            color: #000;
+            padding: 12px 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 1100;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .menu-btn:hover {
+            background: #ffd32a;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="menu-btn" onclick="toggleSurahMenu()">☰ السور</div>
+
+    <div class="surah-menu" id="surahMenu">
+        <div class="surah-header">📚 فهرس السور</div>
+        <div class="surah-list" id="surahList"></div>
+    </div>
+
+    <div class="header">
+        <h1>📖 القرآن الكريم</h1>
+        <p>قراءة الصفحات مزدوجة - من اليمين إلى اليسار</p>
+    </div>
+    
+    <div class="book-container">
+        <!-- Zones pour tourner les pages -->
+        <div class="turn-area turn-left" onclick="prevPage()">‹</div>
+        
+        <div class="pages-container" id="pagesContainer">
+            <!-- Les DEUX pages seront insérées ici -->
+        </div>
+        
+        <div class="turn-area turn-right" onclick="nextPage()">›</div>
+    </div>
+    
+    <div class="controls">
+        <button class="prev" onclick="prevPage()">◀ الصفحة السابقة</button>
+        <div class="page-info" id="pageInfo">الصفحة 1 من 605</div>
+        <button class="next" onclick="nextPage()">الصفحة التالية ▶</button>
+    </div>
+    
+    <div class="quick-nav">
+        <button onclick="goToPage(1)">الصفحة الأولى</button>
+        <input type="number" id="pageInput" min="1" max="605" placeholder="رقم الصفحة">
+        <button onclick="goToInputPage()">اذهب إلى</button>
+        <button onclick="goToPage(605)">الصفحة الأخيرة</button>
+    </div>
+    
+    <div class="page-indicators" id="pageIndicators">
+        <!-- Indicateurs -->
+    </div>
+    
+    <div class="instructions">
+        <h3>كيفية الاستخدام:</h3>
+        <p>• <strong>انقر على السهم الأيمن ›</strong> أو <strong>السهم الأيسر من لوحة المفاتيح</strong> → الصفحة التالية</p>
+        <p>• <strong>انقر على السهم الأيسر ‹</strong> أو <strong>السهم الأيمن من لوحة المفاتيح</strong> → الصفحة السابقة</p>
+        <p>• <strong>المسافة (Space)</strong> → الصفحة التالية</p>
+        <p>• <strong>انقر على النقاط</strong> للانتقال إلى صفحة محددة</p>
+        <p>• <strong>الترتيب الصحيح:</strong> الصفحة الزوجية على اليمين، الفردية على اليسار</p>
+    </div>
+
+    <script>
+        // Configuration
+        const TOTAL_PAGES = 605; // 000.jpg à 604.jpg
+        let currentSpread = 0; // Index du spread actuel
+        
+        // Fonction pour charger une image avec fallback
+        function loadImage(pageNum) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = `pages/${pageNum.toString().padStart(3, '0')}.jpg`;
+                img.onload = () => resolve(img);
+                img.onerror = () => {
+                    console.warn(`Image pages/${pageNum.toString().padStart(3, '0')}.jpg non trouvée`);
+                    // Créer une image de remplacement
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800;
+                    canvas.height = 1200;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#f0f0f0';
+                    ctx.fillRect(0, 0, 800, 1200);
+                    ctx.fillStyle = '#333';
+                    ctx.font = '40px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`الصفحة ${pageNum + 1}`, 400, 600);
+                    
+                    const fallbackImg = new Image();
+                    fallbackImg.src = canvas.toDataURL();
+                    fallbackImg.onload = () => resolve(fallbackImg);
+                };
+            });
+        }
+        
+        // Fonction pour afficher un spread (2 pages)
+        async function showSpread(spreadIndex) {
+            const container = document.getElementById('pagesContainer');
+            container.innerHTML = '';
+            
+            // Calculer les numéros de page
+            // Spread 0: pages 0-1 (mais on affiche d'abord page 0 seule)
+            // Spread 1: pages 2-3
+            // Spread 2: pages 4-5
+            // etc.
+            
+            let rightPageNum, leftPageNum;
+            
+            if (spreadIndex === 0) {
+                // Premier spread: page 0 seule
+                rightPageNum = 0;
+                leftPageNum = null;
+            } else {
+                // Spreads suivants: deux pages
+                rightPageNum = spreadIndex * 2;
+                leftPageNum = spreadIndex * 2 - 1;
+            }
+            
+            // Créer la page de DROITE (toujours présente)
+            const rightPage = document.createElement('div');
+            rightPage.className = 'page page-right';
+            
+            try {
+                const rightImg = await loadImage(rightPageNum);
+                rightPage.appendChild(rightImg);
+                
+                const rightNumber = document.createElement('div');
+                rightNumber.className = 'page-number';
+                rightNumber.textContent = rightPageNum + 1;
+                rightPage.appendChild(rightNumber);
+                
+                container.appendChild(rightPage);
+                
+                console.log(`Page droite: ${rightPageNum + 1} (${rightPageNum.toString().padStart(3, '0')}.jpg)`);
+            } catch (error) {
+                console.error('Erreur chargement page droite:', error);
+            }
+            
+            // Créer la page de GAUCHE (si elle existe)
+            if (leftPageNum !== null && leftPageNum >= 0) {
+                const leftPage = document.createElement('div');
+                leftPage.className = 'page page-left';
+                
+                try {
+                    const leftImg = await loadImage(leftPageNum);
+                    leftPage.appendChild(leftImg);
+                    
+                    const leftNumber = document.createElement('div');
+                    leftNumber.className = 'page-number';
+                    leftNumber.textContent = leftPageNum + 1;
+                    leftPage.appendChild(leftNumber);
+                    
+                    container.appendChild(leftPage);
+                    
+                    console.log(`Page gauche: ${leftPageNum + 1} (${leftPageNum.toString().padStart(3, '0')}.jpg)`);
+                } catch (error) {
+                    console.error('Erreur chargement page gauche:', error);
+                }
+            }
+            
+            // Mettre à jour l'état
+            currentSpread = spreadIndex;
+            
+            // Mettre à jour l'info
+            updatePageInfo();
+            updatePageIndicators();
+        }
+        
+        // Mettre à jour l'information de page
+        function updatePageInfo() {
+            let infoText;
+            
+            if (currentSpread === 0) {
+                infoText = `الصفحة 1 من ${TOTAL_PAGES}`;
+            } else {
+                const rightPage = currentSpread * 2;
+                const leftPage = currentSpread * 2 - 1;
+                infoText = `الصفحات ${rightPage + 1}-${leftPage + 1} من ${TOTAL_PAGES}`;
+            }
+            
+            document.getElementById('pageInfo').textContent = infoText;
+        }
+        
+        // Page suivante
+        function nextPage() {
+            if (currentSpread === 0) {
+                // De la page 1 seule, aller au spread 1 (pages 2-3)
+                showSpread(1);
+            } else {
+                const nextRightPage = (currentSpread + 1) * 2;
+                if (nextRightPage < TOTAL_PAGES) {
+                    showSpread(currentSpread + 1);
+                }
+            }
+        }
+        
+        // Page précédente
+        function prevPage() {
+            if (currentSpread > 0) {
+                showSpread(currentSpread - 1);
+            }
+        }
+        
+        // Aller à une page spécifique
+        function goToPage(pageNum) {
+            const pageIndex = pageNum - 1; // Convertir en 0-based
+            
+            if (pageIndex === 0) {
+                showSpread(0);
+            } else {
+                // Pour une page donnée, trouver le spread correspondant
+                if (pageIndex % 2 === 0) {
+                    // Page paire: c'est la page droite d'un spread
+                    showSpread(pageIndex / 2);
+                } else {
+                    // Page impaire: c'est la page gauche d'un spread
+                    showSpread((pageIndex + 1) / 2);
+                }
+            }
+        }
+        
+        // Aller à la page saisie
+        function goToInputPage() {
+            const input = document.getElementById('pageInput');
+            const pageNum = parseInt(input.value);
+            
+            if (pageNum >= 1 && pageNum <= TOTAL_PAGES) {
+                goToPage(pageNum);
+                input.value = '';
+            } else {
+                alert(`الرجاء إدخال رقم بين 1 و ${TOTAL_PAGES}`);
+            }
+        }
+        
+        // Créer les indicateurs de page
+        function updatePageIndicators() {
+            const container = document.getElementById('pageIndicators');
+            container.innerHTML = '';
+            
+            // Nombre total de spreads
+            const totalSpreads = Math.ceil(TOTAL_PAGES / 2);
+            
+            // Limiter à 30 indicateurs maximum
+            const maxIndicators = Math.min(totalSpreads, 30);
+            const step = Math.ceil(totalSpreads / maxIndicators);
+            
+            for (let i = 0; i < totalSpreads; i += step) {
+                const dot = document.createElement('div');
+                dot.className = 'page-dot';
+                
+                if (i === currentSpread) {
+                    dot.classList.add('active');
+                }
+                
+                // Info pour l'infobulle
+                if (i === 0) {
+                    dot.title = 'الصفحة 1';
+                } else {
+                    dot.title = `الصفحات ${i * 2}-${i * 2 + 1}`;
+                }
+                
+                dot.addEventListener('click', () => {
+                    showSpread(i);
+                });
+                
+                container.appendChild(dot);
+            }
+        }
+        
+        // Navigation au clavier
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === ' ') {
+                nextPage();
+                e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                prevPage();
+                e.preventDefault();
+            } else if (e.key === 'Home') {
+                goToPage(1);
+                e.preventDefault();
+            } else if (e.key === 'End') {
+                goToPage(TOTAL_PAGES);
+                e.preventDefault();
+            }
+        });
+        
+        // Initialisation
+        window.onload = async () => {
+            console.log('Initialisation du lecteur Quran...');
+            console.log(`Total des pages: ${TOTAL_PAGES} (000.jpg à 604.jpg)`);
+            
+            // Afficher la première page
+            await showSpread(0);
+            
+            // Précharger les images suivantes
+            setTimeout(() => {
+                for (let i = 1; i <= 4; i++) {
+                    const img = new Image();
+                    img.src = `pages/${i.toString().padStart(3, '0')}.jpg`;
+                }
+            }, 1000);
+        };
+        
+        // Exposer les fonctions
+        window.nextPage = nextPage;
+        window.prevPage = prevPage;
+        window.goToPage = goToPage;
+        window.goToInputPage = goToInputPage;
+        // ===== DONNÉES DES SOURATES (extrait – tu peux compléter) =====
+        const surahs = [
+            { name: "الفاتحة", page: 1 },
+            { name: "البقرة", page: 2 },
+            { name: "آل عمران", page: 50 },
+            { name: "النساء", page: 77 },
+            { name: "المائدة", page: 106 },
+            { name: "الأنعام", page: 128 },
+            { name: "الأعراف", page: 151 },
+            { name: "الأنفال", page: 177 },
+            { name: "التوبة", page: 187 },
+            { name: "يونس", page: 208 },
+            // ...
+            { name: "الناس", page: 604 }
+        ];
+
+// إنشاء قائمة السور
+        function buildSurahMenu() {
+            const list = document.getElementById('surahList');
+            list.innerHTML = '';
+
+            surahs.forEach(surah => {
+                const item = document.createElement('div');
+                item.className = 'surah-item';
+
+                item.innerHTML = `
+                    <div class="surah-name">${surah.name}</div>
+                    <div class="surah-page">الصفحة ${surah.page}</div>
+                `;
+
+                item.onclick = () => {
+                    goToPage(surah.page);
+                    toggleSurahMenu();
+                };
+
+                list.appendChild(item);
+            });
+        }
+
+        // Ouvrir / fermer le menu
+        function toggleSurahMenu() {
+            document.getElementById('surahMenu').classList.toggle('open');
+        }
+
+        // Initialisation du menu
+        buildSurahMenu();
+
+    </script>
+</body>
+</html>
