@@ -1,1 +1,3 @@
-cliquer sur la page index.html
+1. Télecharger me repo zip
+2. decompresser le
+3. cliquer sur la page index.html
